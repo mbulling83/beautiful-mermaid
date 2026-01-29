@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beautiful Mermaid Editor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 40px);
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .theme-select {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+
+    .theme-select option {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: rgba(255, 255, 255, 0.9);
+      color: #667eea;
+    }
+
+    .btn-primary:hover {
+      background: white;
+    }
+
+    .main-content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .editor-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #e5e7eb;
+    }
+
+    .preview-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #f9fafb;
+    }
+
+    .panel-header {
+      padding: 15px 20px;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 600;
+      color: #374151;
+      font-size: 14px;
+    }
+
+    .editor-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .editor {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      border: none;
+      resize: none;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1f2937;
+      background: white;
+      outline: none;
+    }
+
+    .preview-container {
+      flex: 1;
+      padding: 30px;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f9fafb;
+    }
+
+    .preview-container svg {
+      max-width: 100%;
+      height: auto;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+
+    .error-message {
+      padding: 20px;
+      background: #fee2e2;
+      color: #991b1b;
+      border-radius: 8px;
+      margin: 20px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+
+    .loading {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .examples {
+      padding: 15px 20px;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .example-btn {
+      padding: 6px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: white;
+      color: #374151;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .example-btn:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        flex-direction: column;
+      }
+
+      .editor-panel,
+      .preview-panel {
+        flex: 1;
+        min-height: 300px;
+      }
+
+      .editor-panel {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✨ Beautiful Mermaid Editor</h1>
+      <div class="controls">
+        <select id="themeSelect" class="theme-select">
+          <option value="zinc-light">Zinc Light</option>
+          <option value="zinc-dark">Zinc Dark</option>
+          <option value="tokyo-night" selected>Tokyo Night</option>
+          <option value="tokyo-night-storm">Tokyo Night Storm</option>
+          <option value="tokyo-night-light">Tokyo Night Light</option>
+          <option value="catppuccin-mocha">Catppuccin Mocha</option>
+          <option value="catppuccin-latte">Catppuccin Latte</option>
+          <option value="nord">Nord</option>
+          <option value="nord-light">Nord Light</option>
+          <option value="dracula">Dracula</option>
+          <option value="github-light">GitHub Light</option>
+          <option value="github-dark">GitHub Dark</option>
+          <option value="solarized-light">Solarized Light</option>
+          <option value="solarized-dark">Solarized Dark</option>
+          <option value="one-dark">One Dark</option>
+        </select>
+        <button id="exportBtn" class="btn btn-primary">Export SVG</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="editor-panel">
+        <div class="panel-header">Mermaid Code</div>
+        <div class="editor-container">
+          <textarea id="editor" class="editor" placeholder="Enter your Mermaid diagram code here..."></textarea>
+        </div>
+        <div class="examples">
+          <span style="color: #6b7280; font-size: 12px; margin-right: 10px;">Examples:</span>
+          <button class="example-btn" data-example="flowchart">Flowchart</button>
+          <button class="example-btn" data-example="sequence">Sequence</button>
+          <button class="example-btn" data-example="state">State</button>
+          <button class="example-btn" data-example="class">Class</button>
+          <button class="example-btn" data-example="er">ER Diagram</button>
+        </div>
+      </div>
+
+      <div class="preview-panel">
+        <div class="panel-header">Preview</div>
+        <div class="preview-container" id="preview">
+          <div class="loading">Enter Mermaid code to see preview...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { renderMermaid, THEMES } from 'beautiful-mermaid';
+
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const themeSelect = document.getElementById('themeSelect');
+    const exportBtn = document.getElementById('exportBtn');
+    const exampleBtns = document.querySelectorAll('.example-btn');
+
+    let currentTheme = 'tokyo-night';
+    let debounceTimer = null;
+
+    // Example diagrams
+    const examples = {
+      flowchart: `graph TD
+  A[Start] --> B{Decision}
+  B -->|Yes| C[Process]
+  B -->|No| D[End]
+  C --> D
+  D --> E[Final]`,
+
+      sequence: `sequenceDiagram
+  Alice->>Bob: Hello Bob!
+  Bob-->>Alice: Hi Alice!
+  Alice->>Bob: How are you?
+  Bob-->>Alice: Great, thanks!`,
+
+      state: `stateDiagram-v2
+  [*] --> Idle
+  Idle --> Processing: start
+  Processing --> Complete: done
+  Complete --> [*]`,
+
+      class: `classDiagram
+  Animal <|-- Duck
+  Animal <|-- Fish
+  Animal: +int age
+  Animal: +String gender
+  Animal: +isMammal() bool
+  Duck: +String beakColor
+  Duck: +swim()
+  Duck: +quack()`,
+
+      er: `erDiagram
+  CUSTOMER ||--o{ ORDER : places
+  ORDER ||--|{ LINE_ITEM : contains
+  PRODUCT ||--o{ LINE_ITEM : "is in"
+  CUSTOMER {
+    string name
+    string email
+  }
+  ORDER {
+    int orderNumber
+    date orderDate
+  }`
+    };
+
+    // Load example
+    exampleBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const exampleType = btn.dataset.example;
+        editor.value = examples[exampleType];
+        renderDiagram();
+      });
+    });
+
+    // Initial example
+    editor.value = examples.flowchart;
+
+    // Theme change
+    themeSelect.addEventListener('change', (e) => {
+      currentTheme = e.target.value;
+      renderDiagram();
+    });
+
+    // Editor input with debounce
+    editor.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(renderDiagram, 300);
+    });
+
+    // Export SVG
+    exportBtn.addEventListener('click', () => {
+      const svg = preview.querySelector('svg');
+      if (!svg) {
+        alert('No diagram to export. Please create a diagram first.');
+        return;
+      }
+
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = svgUrl;
+      downloadLink.download = 'mermaid-diagram.svg';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(svgUrl);
+    });
+
+    // Render diagram
+    async function renderDiagram() {
+      const code = editor.value.trim();
+      
+      if (!code) {
+        preview.innerHTML = '<div class="loading">Enter Mermaid code to see preview...</div>';
+        return;
+      }
+
+      preview.innerHTML = '<div class="loading">Rendering...</div>';
+
+      try {
+        const theme = THEMES[currentTheme] || THEMES['tokyo-night'];
+        const svg = await renderMermaid(code, theme);
+        preview.innerHTML = svg;
+      } catch (error) {
+        console.error('Render error:', error);
+        preview.innerHTML = `
+          <div class="error-message">
+            <strong>Error rendering diagram:</strong><br>
+            ${error.message || 'Unknown error occurred'}
+          </div>
+        `;
+      }
+    }
+
+    // Initial render
+    renderDiagram();
+  </script>
+</body>
+</html>
