@@ -98,6 +98,48 @@
       background: white;
     }
 
+    .export-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .export-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      padding: 12px;
+      min-width: 180px;
+      z-index: 1000;
+    }
+
+    .export-menu.show {
+      display: block;
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .export-buttons .btn {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .export-buttons .btn-export {
+      background: #667eea;
+      color: white;
+    }
+
+    .export-buttons .btn-export:hover {
+      background: #5568d3;
+    }
+
     .main-content {
       display: flex;
       flex: 1;
@@ -265,7 +307,15 @@
           <option value="solarized-dark">Solarized Dark</option>
           <option value="one-dark">One Dark</option>
         </select>
-        <button id="exportBtn" class="btn btn-primary">Export SVG</button>
+        <div class="export-dropdown">
+          <button id="exportBtn" class="btn btn-primary">Export</button>
+          <div id="exportMenu" class="export-menu">
+            <div class="export-buttons">
+              <button id="exportSvgBtn" class="btn btn-export">Export SVG</button>
+              <button id="exportPngBtn" class="btn btn-export">Export PNG</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -378,15 +428,45 @@
       debounceTimer = setTimeout(renderDiagram, 300);
     });
 
+    // Export dropdown toggle
+    const exportMenu = document.getElementById('exportMenu');
+    const exportSvgBtn = document.getElementById('exportSvgBtn');
+    const exportPngBtn = document.getElementById('exportPngBtn');
+
+    exportBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportMenu.classList.toggle('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!exportBtn.contains(e.target) && !exportMenu.contains(e.target)) {
+        exportMenu.classList.remove('show');
+      }
+    });
+
+    // Helper function to get SVG for export
+    function getExportSvg() {
+      const svg = preview.querySelector('svg');
+      if (!svg) {
+        return null;
+      }
+
+      // Simply clone the SVG as-is
+      return svg.cloneNode(true);
+    }
+
+
     // Export SVG
-    exportBtn.addEventListener('click', () => {
+    exportSvgBtn.addEventListener('click', () => {
       const svg = preview.querySelector('svg');
       if (!svg) {
         alert('No diagram to export. Please create a diagram first.');
         return;
       }
 
-      const svgData = new XMLSerializer().serializeToString(svg);
+      const exportSvg = getExportSvg();
+      const svgData = new XMLSerializer().serializeToString(exportSvg);
       const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
       const svgUrl = URL.createObjectURL(svgBlob);
       const downloadLink = document.createElement('a');
@@ -396,6 +476,77 @@
       downloadLink.click();
       document.body.removeChild(downloadLink);
       URL.revokeObjectURL(svgUrl);
+      
+      exportMenu.classList.remove('show');
+    });
+
+    // Export PNG - uses SVG export for perfect consistency
+    exportPngBtn.addEventListener('click', async () => {
+      const svg = preview.querySelector('svg');
+      if (!svg) {
+        alert('No diagram to export. Please create a diagram first.');
+        return;
+      }
+
+      try {
+        // Use the same SVG export function for consistency
+        const exportSvg = getExportSvg();
+        const svgData = new XMLSerializer().serializeToString(exportSvg);
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        
+        // Get dimensions from the exported SVG
+        const rect = svg.getBoundingClientRect();
+        const width = Math.ceil(rect.width) || 800;
+        const height = Math.ceil(rect.height) || 600;
+        
+        // Create image to load SVG
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = svgUrl;
+        });
+        
+        // Use high DPI for better quality
+        const scale = window.devicePixelRatio || 2;
+        const canvasWidth = width * scale;
+        const canvasHeight = height * scale;
+        
+        // Create canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        ctx.scale(scale, scale);
+        
+        // Set white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        
+        // Draw the SVG image
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Clean up
+        URL.revokeObjectURL(svgUrl);
+        
+        // Convert to PNG
+        canvas.toBlob((blob) => {
+          const pngUrl = URL.createObjectURL(blob);
+          const downloadLink = document.createElement('a');
+          downloadLink.href = pngUrl;
+          downloadLink.download = 'mermaid-diagram.png';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          URL.revokeObjectURL(pngUrl);
+        }, 'image/png');
+
+        exportMenu.classList.remove('show');
+      } catch (error) {
+        console.error('PNG export error:', error);
+        alert('Error exporting PNG: ' + error.message);
+      }
     });
 
     // Render diagram

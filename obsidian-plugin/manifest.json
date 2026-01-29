@@ -1,0 +1,11 @@
+{
+	"id": "beautiful-mermaid",
+	"name": "Beautiful Mermaid",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Render Mermaid diagrams with beautiful themes using the beautiful-mermaid library",
+	"author": "Your Name",
+	"authorUrl": "https://github.com/lukilabs/beautiful-mermaid",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}

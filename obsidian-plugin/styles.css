@@ -1,0 +1,92 @@
+/* Beautiful Mermaid Plugin Styles */
+
+.beautiful-mermaid-container {
+	display: block;
+	padding: 0;
+	margin: 0;
+	width: 100%;
+}
+
+.beautiful-mermaid-svg-wrapper {
+	width: 100%;
+	display: block;
+	overflow: hidden;
+	/* Account for scale transform */
+	height: auto;
+}
+
+.beautiful-mermaid-svg-wrapper {
+	/* Box styling when enabled */
+}
+
+.beautiful-mermaid-container[data-show-box="true"] .beautiful-mermaid-svg-wrapper {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 20px;
+	background: var(--background-primary);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	margin: 10px 0;
+	display: inline-block;
+	width: fit-content;
+	max-width: 100%;
+}
+
+.beautiful-mermaid-svg-wrapper svg {
+	width: auto;
+	height: auto;
+	display: block;
+	margin: 0 auto;
+	padding: 0;
+	/* Size is controlled by data-size attribute */
+}
+
+/* Dynamic size based on setting */
+.beautiful-mermaid-container[data-size] .beautiful-mermaid-svg-wrapper svg {
+	max-width: var(--beautiful-mermaid-size, 60%);
+}
+
+/* Match Obsidian's native Mermaid styling */
+.markdown-preview-view .beautiful-mermaid-container {
+	margin: 0;
+	padding: 0;
+}
+
+.markdown-source-view .beautiful-mermaid-container {
+	margin: 0;
+	padding: 0;
+}
+
+.beautiful-mermaid-loading {
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.beautiful-mermaid-error {
+	padding: 20px;
+	background: var(--background-modifier-error);
+	color: var(--text-error);
+	border-radius: 4px;
+	font-family: var(--font-monospace);
+	font-size: 0.9em;
+}
+
+.beautiful-mermaid-error strong {
+	display: block;
+	margin-bottom: 8px;
+}
+
+/* Ensure diagrams match native Mermaid spacing */
+.markdown-preview-view .beautiful-mermaid-container,
+.markdown-source-view .beautiful-mermaid-container {
+	margin: 0;
+	padding: 0;
+}
+
+/* Dark mode adjustments */
+.theme-dark .beautiful-mermaid-error {
+	background: rgba(220, 38, 38, 0.2);
+}
+
+.theme-light .beautiful-mermaid-error {
+	background: rgba(239, 68, 68, 0.1);
+}
